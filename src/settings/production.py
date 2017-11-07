@@ -10,7 +10,7 @@ DEBUG = false
 
 ALLOWED_HOSTS = []
 
-CACHE_HOST = ''
+CACHES['default']['LOCATION'] = 'redis://127.0.0.1:6379')
 
 DATABASES = {
     'default': {
