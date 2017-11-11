@@ -7,7 +7,7 @@ SECRET_KEY = '$jv3==l0@dtkongpg2np9$8x^v4g!a1lq7l5r_=y*a9@v!uos('
 
 DEBUG = True
 
-ALLOWED_HOSTS = ['*', 'othello_server']
+ALLOWED_HOSTS = ['*', 'reversi_server']
 
 CACHES['default']['LOCATION'] = 'redis://{}:6379'.format(socket.gethostbyname('redis'))
 
