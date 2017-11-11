@@ -20,6 +20,8 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+AUTH_PROFILE_MODULE = 'entity.UserProfile'
+
 APPEND_SLASH = False
 
 ROOT_URLCONF = 'urls'

@@ -1,13 +1,18 @@
 # -*- coding: utf-8 -*-
+from abc import ABCMeta
+from collections import ChainMap
 from functools import wraps
 
 from django.core.cache import cache
+
+from apps.entity import get_bases_dict
 
 
 def cachehandler(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
-        handler = globals()[args[0].__name__].dispatch(func.__name__)
+        cls = globals()[args[0].__name__]
+        handler = getattr(cls, func.__name__)
         kwargs['cache_handler'] = handler
         return func(*args, **kwargs)
     return wrapper
@@ -30,11 +35,18 @@ def match(data, where):
     return all([data.get(k) == v for k, v in where.items()]) if where else True
 
 
-class CacheModel:
-    @classmethod
-    def dispatch(cls, method=None):
-        return getattr(cls, method)
+class DecolatorMeta(ABCMeta):
+    def __new__(mcls, name, bases, namespace):
+        ns = ChainMap(namespace, *get_bases_dict(bases))
+        namespace['multi_select'] = classmethod((ns['multi_select']))
+        namespace['select'] = classmethod(cachekey(ns['select']))
+        namespace['insert'] = classmethod(cachekey(ns['insert']))
+        namespace['update'] = classmethod(cachekey(ns['update']))
+        namespace['delete'] = classmethod(cachekey(ns['delete']))
+        return super().__new__(mcls, name, bases, namespace)
 
+
+class CacheModel(metaclass=DecolatorMeta):
     @classmethod
     @cachekey
     def multi_select(cls, *args, **kwargs):
@@ -44,7 +56,6 @@ class CacheModel:
     @classmethod
     @cachekey
     def select(cls, *args, **kwargs):
-        import socket
         return cache.get(kwargs['key'])
 
     @classmethod

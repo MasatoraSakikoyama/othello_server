@@ -2,9 +2,9 @@
 from abc import ABCMeta
 from collections import ChainMap
 
-from apps.apiv1.utils import require
-from apps.apiv1.entities.caches import cachehandler
-from apps.apiv1.entities.models import Game
+from apps.entity.utils import require
+from apps.entity.caches import cachehandler
+from apps.entity.models import Game
 
 
 def get_bases_dict(bases):
@@ -63,7 +63,8 @@ class GameStatus(BaseModel):
             return cache
         else:
             if where:
-                return [d.serialized for d in Game.objects.filter(**where).get()]
+                return [d.serialized for d in
+                        Game.objects.filter(**where).get()]
             else:
                 return [d.serialized for d in Game.objects.all()]
 
