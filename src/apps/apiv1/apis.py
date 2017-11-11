@@ -2,7 +2,7 @@
 from django.http import HttpResponse
 from django.views.generic import View
 
-from apps.entity import GameStatus
+from apps.entity.entities import GameStatus
 
 
 class JSONView(View):

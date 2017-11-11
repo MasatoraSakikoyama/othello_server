@@ -2,6 +2,7 @@
 import json
 
 from django.db import models
+from django.db.models.signals import post_save
 from django.forms.models import model_to_dict
 from django.contrib.auth.models import User
 
@@ -24,48 +25,58 @@ class BaseModel(models.Model):
 
 class UserProfile(BaseModel):
     user = models.OneToOneField(User)
+    # FixMe
     image = models.ImageField()
 
     class Meta:
         db_table = 'user_profile'
 
 
+def create_user_profile(sender, instance, created, **kwargs):
+    if created:
+        UserProfile.objects.create(user=instance)
+
+
+post_save.connect(create_user_profile, sender=User)
+
+
 class Game(BaseModel):
-    winner = models.ForeignKey(Player, on_delete=models.DO_NOTHING, related_query_name='game')
-    first = models.ForeignKey(Player, on_delete=models.DO_NOTHING, related_query_name='game')
-    second = models.ForeignKey(Player, on_delete=models.DO_NOTHING, related_query_name='game')
+    last_count = models.IntegerField(null=False, blank=False)
+    last_record = models.TextField(null=False, blank=False)
 
     class Meta:
         db_table = 'game'
 
 
-class Turn(BaseModel):
-    X_AXIS = (
-        ('a', 'a'),
-        ('b', 'b'),
-        ('c', 'c'),
-        ('d', 'd'),
-        ('e', 'e'),
-        ('f', 'f'),
-        ('d', 'd'),
-        ('h', 'h'),
-    )
-    Y_AXIS = (
-        ('1', '1'),
-        ('2', '2'),
-        ('3', '3'),
-        ('4', '4'),
-        ('5', '5'),
-        ('6', '6'),
-        ('7', '7'),
-        ('8', '8'),
+class Player(BaseModel):
+    CHOICES = (
+        ('w', 'white'),
+        ('b', 'black'),
     )
 
+    color = models.CharField(max_length=1, choices=CHOICES)
+    is_fierst = models.BooleanField(null=False, blank=False)
+    is_winner = models.BooleanField(null=False, blank=False)
+
+    user = models.ForeignKey(User, on_delete=models.DO_NOTHING)
+    game = models.ForeignKey(Game, on_delete=models.CASCADE)
+
+    class Meta:
+        db_table = 'player'
+
+
+class Turn(BaseModel):
+    X_AXIS = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
+    Y_AXIS = ['1', '2', '3', '4', '5', '6', '7', '8']
+    CHOICES = tuple([('{}{}'.format(x, y), '{}{}'.format(x, y)) for x in X_AXIS
+                    for y in Y_AXIS]) + (('path', 'path'),)
+
     count = models.IntegerField(null=False, blank=False)
-    x_axis = models.CharField(choices=X_AXIS, null=False, blank=False)
-    y_axis = models.CharField(choices=Y_AXIS, null=False, blank=False)
-    game = models.ForeignKey(Game, on_delete=models.DO_NOTHING, related_query_name='turn')
-    player = models.ForeignKey(Player, on_delete=models.DO_NOTHING, related_query_name='turn')
+    axis = models.CharField(max_length=4, choices=CHOICES)
+    record = models.TextField(null=False, blank=False)
+
+    player = models.ForeignKey(Player, on_delete=models.CASCADE)
+    game = models.ForeignKey(Game, on_delete=models.CASCADE)
 
     class Meta:
         db_table = 'turn'

@@ -5,7 +5,7 @@ from functools import wraps
 
 from django.core.cache import cache
 
-from apps.entity import get_bases_dict
+from apps.entity.utils import bases_dict
 
 
 def cachehandler(func):
@@ -18,61 +18,54 @@ def cachehandler(func):
     return wrapper
 
 
-def cachekey(func):
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        id = kwargs.get('id')
-        key = '{class_name}_{id}'.format(
-            class_name=args[0].__name__,
-            id=id if id else '*',
-        )
-        kwargs['key'] = key
-        return func(*args, **kwargs)
-    return wrapper
-
-
-def match(data, where):
-    return all([data.get(k) == v for k, v in where.items()]) if where else True
-
-
 class DecolatorMeta(ABCMeta):
     def __new__(mcls, name, bases, namespace):
-        ns = ChainMap(namespace, *get_bases_dict(bases))
-        namespace['multi_select'] = classmethod((ns['multi_select']))
-        namespace['select'] = classmethod(cachekey(ns['select']))
-        namespace['insert'] = classmethod(cachekey(ns['insert']))
-        namespace['update'] = classmethod(cachekey(ns['update']))
-        namespace['delete'] = classmethod(cachekey(ns['delete']))
+        ns = ChainMap(namespace, *bases_dict(bases))
+        namespace['_match'] = classmethod(ns['_match'])
+        namespace['_key'] = classmethod(ns['_key'])
+        namespace['multi_select'] = classmethod(ns['multi_select'])
+        namespace['select'] = classmethod(ns['select'])
+        namespace['insert'] = classmethod(ns['insert'])
+        namespace['update'] = classmethod(ns['update'])
+        namespace['delete'] = classmethod(ns['delete'])
         return super().__new__(mcls, name, bases, namespace)
 
 
 class CacheModel(metaclass=DecolatorMeta):
-    @classmethod
-    @cachekey
+    def _match(data, where):
+        if where:
+            return all([data.get(k) == v for k, v in where.items()])
+        else:
+            return True
+
+    def _key(cls, *args, **kwargs):
+        game_id = kwargs['game_id']
+        return '{cls_name}_{id}'.format(
+            cls_name=cls.__name__.lower(),
+            id=game_id if game_id else '*',
+        )
+
     def multi_select(cls, *args, **kwargs):
-        keys = cache.keys(kwargs['key'])
-        return [d for d in cache.get_many(keys) if match(d, kwargs['where'])]
+        keys = cache.keys(cls._key(*args, **kwargs))
+        return [d for d in cache.get_many(keys)
+                if cls._match(d, kwargs['where'])]
 
-    @classmethod
-    @cachekey
     def select(cls, *args, **kwargs):
-        return cache.get(kwargs['key'])
+        return cache.get(cls._key(*args, **kwargs))
 
-    @classmethod
-    @cachekey
     def insert(cls, *args, **kwargs):
-        return cache.add(kwargs['key'], kwargs['data'])
+        cache.add(cls._key(*args, **kwargs), kwargs['data'])
 
-    @classmethod
-    @cachekey
     def update(cls, *args, **kwargs):
-        return cache.set(kwargs['key'], kwargs['data'])
+        cache.set(cls._key(*args, **kwargs), kwargs['data'])
 
-    @classmethod
-    @cachekey
     def delete(cls, *args, **kwargs):
-        return cache.delete(kwargs['key'])
+        cache.delete(cls._key(*args, **kwargs))
 
 
 class GameStatus(CacheModel):
+    pass
+
+
+class TurnStatus(CacheModel):
     pass
