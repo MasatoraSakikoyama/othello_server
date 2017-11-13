@@ -10,7 +10,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
 
     'apps.apiv1.apps.Apiv1Config',
-    'apps.entity.apps.EntityConfig',
 ]
 
 MIDDLEWARE = [

@@ -1,21 +1,10 @@
 # -*- coding: utf-8 -*-
 from abc import ABCMeta
 from collections import ChainMap
-from functools import wraps
 
 from django.core.cache import cache
 
-from apps.entity.utils import bases_dict
-
-
-def cachehandler(func):
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        cls = globals()[args[0].__name__]
-        handler = getattr(cls, func.__name__)
-        kwargs['cache_handler'] = handler
-        return func(*args, **kwargs)
-    return wrapper
+from apps.apiv1.utils import bases_dict
 
 
 class DecolatorMeta(ABCMeta):
@@ -31,41 +20,40 @@ class DecolatorMeta(ABCMeta):
         return super().__new__(mcls, name, bases, namespace)
 
 
-class CacheModel(metaclass=DecolatorMeta):
+class BaseCache(metaclass=DecolatorMeta):
     def _match(data, where):
         if where:
             return all([data.get(k) == v for k, v in where.items()])
         else:
             return True
 
-    def _key(cls, *args, **kwargs):
-        game_id = kwargs['game_id']
+    def _key(cls, game_id):
         return '{cls_name}_{id}'.format(
             cls_name=cls.__name__.lower(),
             id=game_id if game_id else '*',
         )
 
-    def multi_select(cls, *args, **kwargs):
-        keys = cache.keys(cls._key(*args, **kwargs))
+    def get_many(cls, where):
+        keys = cache.keys(cls._key())
         return [d for d in cache.get_many(keys)
-                if cls._match(d, kwargs['where'])]
+                if cls._match(d, where)]
 
-    def select(cls, *args, **kwargs):
-        return cache.get(cls._key(*args, **kwargs))
+    def get(cls, game_id):
+        return cache.get(cls._key(game_id))
 
-    def insert(cls, *args, **kwargs):
-        cache.add(cls._key(*args, **kwargs), kwargs['data'])
+    def add(cls, game_id, data):
+        cache.add(cls._key(game_id), data)
 
-    def update(cls, *args, **kwargs):
-        cache.set(cls._key(*args, **kwargs), kwargs['data'])
+    def set(cls, game_id, data):
+        cache.set(cls._key(game_id), data)
 
-    def delete(cls, *args, **kwargs):
-        cache.delete(cls._key(*args, **kwargs))
+    def delete(cls, game_id):
+        cache.delete(cls._key(game_id))
 
 
-class GameStatus(CacheModel):
+class GameStatusCache(BaseCache):
     pass
 
 
-class TurnStatus(CacheModel):
+class TurnStatusCache(BaseCache):
     pass

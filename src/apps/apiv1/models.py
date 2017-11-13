@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
-import json
-
 from django.db import models
 from django.db.models.signals import post_save
 from django.forms.models import model_to_dict
 from django.contrib.auth.models import User
 
-from apps.entity.utils import datetime_default
+from apps.apiv1.consts import X_AXIS, Y_AXIS
 
 
 class BaseModel(models.Model):
@@ -16,8 +14,7 @@ class BaseModel(models.Model):
 
     @property
     def serialized(self):
-        data = model_to_dict(self)
-        return json.dumps(data, default=datetime_default)
+        return model_to_dict(self)
 
     class Meta:
         abstract = True
@@ -41,8 +38,8 @@ post_save.connect(create_user_profile, sender=User)
 
 
 class Game(BaseModel):
-    last_count = models.IntegerField(null=False, blank=False)
-    last_record = models.TextField(null=False, blank=False)
+    last_count = models.IntegerField(default=0)
+    last_record = models.TextField(default='')
 
     class Meta:
         db_table = 'game'
@@ -55,8 +52,8 @@ class Player(BaseModel):
     )
 
     color = models.CharField(max_length=1, choices=CHOICES)
-    is_fierst = models.BooleanField(null=False, blank=False)
-    is_winner = models.BooleanField(null=False, blank=False)
+    is_first = models.BooleanField(null=False, blank=False)
+    is_winner = models.BooleanField()
 
     user = models.ForeignKey(User, on_delete=models.DO_NOTHING)
     game = models.ForeignKey(Game, on_delete=models.CASCADE)
@@ -66,8 +63,6 @@ class Player(BaseModel):
 
 
 class Turn(BaseModel):
-    X_AXIS = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
-    Y_AXIS = ['1', '2', '3', '4', '5', '6', '7', '8']
     CHOICES = tuple([('{}{}'.format(x, y), '{}{}'.format(x, y)) for x in X_AXIS
                     for y in Y_AXIS]) + (('path', 'path'),)
 
