@@ -4,9 +4,9 @@ from collections import ChainMap
 
 from django.db.transaction import atomic
 
-from apps.apiv1.utils import bases_dict
-from apps.apiv1.models import Game, Player, Turn
-from apps.apiv1.entities.caches import GameStatusCache, TurnStatusCache
+from apps.entity.utils import bases_dict
+from apps.entity.models import Game, Player, Turn
+from apps.entity.caches import GameStatusCache, TurnStatusCache
 
 
 def get_game_status(game_id):
@@ -63,7 +63,7 @@ class BaseEntity(metaclass=DecolatorMeta):
         raise NotImplementedError
 
 
-class GameStatusEntity(BaseEntity):
+class GameStatus(BaseEntity):
     def multi_select(cls, *args, **kwargs):
         where = kwargs.get('where')
 
@@ -106,7 +106,7 @@ class GameStatusEntity(BaseEntity):
         pass
 
 
-class TurnStatusEntity(BaseEntity):
+class TurnStatus(BaseEntity):
     def multi_select(cls, *args, **kwargs):
         where = kwargs.get('where')
 
@@ -149,7 +149,7 @@ class TurnStatusEntity(BaseEntity):
         pass
 
 
-class GameEntity(BaseEntity):
+class Game(BaseEntity):
     def multi_select(cls, *args, **kwargs):
         pass
 
@@ -181,7 +181,7 @@ class GameEntity(BaseEntity):
         TurnStatusCache.delete(game_id)
 
 
-class PlayerEntity(BaseEntity):
+class Player(BaseEntity):
     def multi_select(cls, *args, **kwargs):
         pass
 
@@ -211,7 +211,7 @@ class PlayerEntity(BaseEntity):
         TurnStatusCache.set(game_id, turn_status)
 
 
-class TurnEntity(BaseEntity):
+class Turn(BaseEntity):
     def multi_select(cls, *args, **kwargs):
         pass
 

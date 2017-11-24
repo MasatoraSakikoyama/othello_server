@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import socket
 
-from .base import *
+from settings.base import *
 
 SECRET_KEY = '$jv3==l0@dtkongpg2np9$8x^v4g!a1lq7l5r_=y*a9@v!uos('
 

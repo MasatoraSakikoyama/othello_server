@@ -4,7 +4,7 @@ from django.db.models.signals import post_save
 from django.forms.models import model_to_dict
 from django.contrib.auth.models import User
 
-from apps.apiv1.consts import X_AXIS, Y_AXIS
+from django.conf import settings
 
 
 class BaseModel(models.Model):
@@ -63,8 +63,9 @@ class Player(BaseModel):
 
 
 class Turn(BaseModel):
-    CHOICES = tuple([('{}{}'.format(x, y), '{}{}'.format(x, y)) for x in X_AXIS
-                    for y in Y_AXIS]) + (('path', 'path'),)
+    CHOICES = tuple([('{}{}'.format(x, y), '{}{}'.format(x, y))
+                    for x in settings.X_AXIS
+                    for y in settings.Y_AXIS]) + (('path', 'path'),)
 
     count = models.IntegerField(null=False, blank=False)
     axis = models.CharField(max_length=4, choices=CHOICES)

@@ -4,7 +4,7 @@ from collections import ChainMap
 
 from django.core.cache import cache
 
-from apps.apiv1.utils import bases_dict
+from apps.entity.utils import bases_dict
 
 
 class DecolatorMeta(ABCMeta):
@@ -12,10 +12,10 @@ class DecolatorMeta(ABCMeta):
         ns = ChainMap(namespace, *bases_dict(bases))
         namespace['_match'] = classmethod(ns['_match'])
         namespace['_key'] = classmethod(ns['_key'])
-        namespace['multi_select'] = classmethod(ns['multi_select'])
-        namespace['select'] = classmethod(ns['select'])
-        namespace['insert'] = classmethod(ns['insert'])
-        namespace['update'] = classmethod(ns['update'])
+        namespace['get_many'] = classmethod(ns['get_many'])
+        namespace['get'] = classmethod(ns['get'])
+        namespace['add'] = classmethod(ns['add'])
+        namespace['set'] = classmethod(ns['set'])
         namespace['delete'] = classmethod(ns['delete'])
         return super().__new__(mcls, name, bases, namespace)
 
