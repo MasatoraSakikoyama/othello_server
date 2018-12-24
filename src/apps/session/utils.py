@@ -2,10 +2,11 @@
 from functools import wraps
 from datetime import datetime
 
-import jwt
 from django.conf import settings
-from django.http import HttpResponse
+from django.http import JsonResponse
 
+SESSION_KEY = 'user_id'
+SESSION_EXPIRE = 7*24*60*60
 
 def datetime_default(o):
     if isinstance(o, datetime):
@@ -13,31 +14,20 @@ def datetime_default(o):
     raise TypeError(repr(o) + " is not JSON serializable")
 
 
-def create_jwt(user_id, expire=3600):
-    now = datetime.utcnow()
-    payload = {
-        'nbf': now,
-        'exp': now + timedelta(seconds=expire),
-        'user_id': user_id,
-    }
-    token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')
+def set_session(response, value):
+    response.set_cookie(SESSION_KEY, value, SESSION_EXPIRE)
 
 
-def check_jwt(func):
+def check_session(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
-        try:
-            user_id = jwt.decode(
-                args[0].META['HTTP_AUTHORIZATION'],
-                settings.SECRET_KEY,
-                algorithms=['HS256']
-            ).get('user_id')
-
-            if user_id:
-                args[1] = user_id
-            else:
-                raise
-        except:
-            return HttpResponse(status=401)
-        return func(*args, **kwargs)
+        request = args[0]
+        if request.user.is_authenticated:
+            kwargs[SESSION_KEY] = request.user.id
+            return func(*args, **kwargs)
+        elif request.COOKIES.get(SESSION_KEY):
+            kwargs[SESSION_KEY] = request.COOKIES.get(SESSION_KEY)
+            return func(*args, **kwargs)
+        else:
+            return JsonResponse(status=401)
     return wrapper

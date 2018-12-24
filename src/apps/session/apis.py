@@ -1,78 +1,57 @@
 # -*- coding: utf-8 -*-
-import json
-
-from django.contrib.auth import authenticate
+from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
-from django.http import HttpResponse
-from django.views.generic import View
+from django.http import JsonResponse
 
-from apps.session.utils import datetime_default, create_jwt, check_jwt
-
-
-class JSONView(View):
-    http_method_names = ['get', 'post', 'put', 'delete']
-
-    def json_response(self, status, data):
-        return HttpResponse(
-            status=status,
-            content=json.dumps(data, default=datetime_default),
-            content_type='application/json',
-        )
+from apps.session.utils import check_session
 
 
-class Account(JSONView):
-    http_method_names = ['post', 'put']
-
-    def post(self, request):
-        data = request.POST
+@check_session
+def account(request, user_id):
+    if request.method == 'POST':
         user = User.objects.create_user(
-            data['user_id'],
-            data['email'],
-            data['password'],
-        )
+            request.POST['user_id'],
+            request.POST['email'],
+            request.POST['password'])
         user.save()
-        return self.json_response(200, {'message': 'success'})
+        return JsonResponse(status=200)
 
-    @check_jwt
-    def put(self, request, user_id):
-        data = request.POST
+    elif request.method == 'PUT':
         user = authenticate(
-            user_id=data.get('user_id'),
-            password=data.get('password'),
-        )
+            user_id=request.POST.get('user_id'),
+            password=request.POST.get('password'))
         if user:
-            username = data.get('username')
-            new_password = data.get('new_password')
+            username = request.POST.get('username')
+            new_password = request.POST.get('new_password')
             if username:
                 user.username = username
             if new_password:
                 user.set_password(new_password)
             user.save()
-            return self.json_response(200, {'message': 'success'})
+            return JsonResponse(statis=200)
         else:
-            return self.json_response(400, {'message': 'Invalid param'})
+            return JsonResponse({'message': 'Invalid param'}, status=400)
+    else:
+        return JsonResponse(status=405)
 
 
-class Authenticate(JSONView):
-    http_method_names = ['post']
-
-    def post(self, request):
-        data = request.POST
+def auth(request):
+    if request.method == 'POST':
         user = authenticate(
-            user_id=data.get('user_id'),
-            password=data.get('password'),
-        )
+            user_id=request.POST.get('user_id'),
+            password=request.POST.get('password'))
         if user:
-            token = create_jwt(data['user_id'])
-            return self.json_response(200, {'token': token.decode('ascii')})
+            login(request, user)
+            return JsonResponse(status=200)
         else:
-            return self.json_response(400, {'message': 'Invalid param'})
+            return JsonResponse({'message': 'Invalid param'}, status=400)
+    else:
+        return JsonResponse(status=405)
 
 
-class Unauthenticate(JSONView):
-    http_method_names = ['post']
-
-    @check_jwt
-    def post(self, request, user_id):
-        token = create_jwt(user_id, expire=-1)
-        return self.json_response(200, {'token': token.decode('ascii')})
+def unauth(request):
+    if request.method == 'POST':
+        logout(request)
+        return JsonResponse(status=200)
+    else:
+        return JsonResponse(status=405)

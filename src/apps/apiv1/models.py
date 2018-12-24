@@ -20,43 +20,18 @@ class BaseModel(models.Model):
         abstract = True
 
 
-class UserProfile(BaseModel):
-    user = models.OneToOneField(User)
-    # FixMe
-    image = models.ImageField()
-
-    class Meta:
-        db_table = 'user_profile'
-
-
-def create_user_profile(sender, instance, created, **kwargs):
-    if created:
-        UserProfile.objects.create(user=instance)
-
-
-post_save.connect(create_user_profile, sender=User)
-
-
 class Game(BaseModel):
-    last_count = models.IntegerField(default=0)
-    last_record = models.TextField(default='')
-
     class Meta:
         db_table = 'game'
 
 
 class Player(BaseModel):
-    CHOICES = (
-        ('w', 'white'),
-        ('b', 'black'),
-    )
-
-    color = models.CharField(max_length=1, choices=CHOICES)
-    is_first = models.BooleanField(null=False, blank=False)
-    is_winner = models.BooleanField()
-
-    user = models.ForeignKey(User, on_delete=models.DO_NOTHING)
+    login_user = models.ForeignKey(User, on_delete=models.DO_NOTHING, null=True, blank=True)
+    anonimous_user = models.CharField(max_length=128, null=True, blank=True)
+    color = models.CharField(max_length=1, choices=(('w', 'white'), ('b', 'black')))
     game = models.ForeignKey(Game, on_delete=models.CASCADE)
+    is_first = models.BooleanField(null=False, blank=False)
+    is_winner = models.BooleanField(null=True, blank=True)
 
     class Meta:
         db_table = 'player'
@@ -69,8 +44,6 @@ class Turn(BaseModel):
 
     count = models.IntegerField(null=False, blank=False)
     axis = models.CharField(max_length=4, choices=CHOICES)
-    record = models.TextField(null=False, blank=False)
-
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
     game = models.ForeignKey(Game, on_delete=models.CASCADE)
 

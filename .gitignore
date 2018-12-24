@@ -139,3 +139,5 @@ migrations/
 
 local/
 local.py
+
+.venv

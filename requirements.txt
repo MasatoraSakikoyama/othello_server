@@ -1,9 +1,10 @@
-Django==1.11.7
-flake8==3.3.0
+Django==2.1.4
+django-redis==4.10.0
+flake8==3.6.0
 mccabe==0.6.1
-Pillow==4.3.0
-pycodestyle==2.3.1
-pyflakes==1.5.0
+olefile==0.46
+Pillow==5.3.0
+pycodestyle==2.4.0
+pyflakes==2.0.0
 pyhaikunator==0.0.4
-PyJWT==1.5.3
-pytz==2017.3
+pytz==2018.7

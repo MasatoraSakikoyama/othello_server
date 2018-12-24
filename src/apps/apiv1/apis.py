@@ -1,20 +1,32 @@
 # -*- coding: utf-8 -*-
-from apps.session.apis import JSONView
-from apps.session.utils import check_jwt
-from apps.entity.entities import GameStatus
+from django.http import JsonResponse
+
+from apps.apiv1.entities import GameStatus
+from apps.session.utils import check_session
 
 
-class Initialize(JSONView):
-    http_method_names = ['post']
+@check_session
+def init(request, user_id):
+    if request.method == 'GET':
+        return JsonResponse(GameStatus.multi_select(), status=200)
+    else:
+        return JsonResponse(status=405)
 
-    @check_jwt
-    def post(self, request, user_id):
-        return self.json_response(200, GameStatus.multi_select())
+
+@check_session
+def game(request, user_id):
+    if request.method == 'GET':
+        return JsonResponse(GameStatus.select(game_id=1), status=200)
+
+    elif request.method == 'POST':
+        return JsonResponse(GameStatus.select(game_id=1), status=200)
+    else:
+        return JsonResponse(status=405)
 
 
-class Turn(JSONView):
-    http_method_names = ['post']
-
-    @check_jwt
-    def post(self, request, user_id):
-        return self.json_response(200, GameStatus.select(game_id=1))
+@check_session
+def turn(request, user_id):
+    if request.method == 'GET':
+        return JsonResponse(GameStatus.select(game_id=1), status=200)
+    else:
+        return JsonResponse(status=405)

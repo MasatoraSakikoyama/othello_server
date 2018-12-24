@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 from django.conf.urls import url
 
-from apps.apiv1.apis import Initialize, Turn
+from apps.apiv1.apis import init, game, turn
 
 urlpatterns = [
-    url(r'^initialize', Initialize.as_view(), name='initialize'),
-    url(r'^turn', Turn.as_view(), name='turn'),
+    url(r'^init', init, name='init'),
+    url(r'^game', game, name='game'),
+    url(r'^turn', turn, name='turn'),
 ]
