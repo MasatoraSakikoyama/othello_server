@@ -11,8 +11,9 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
 
-    'apps.session',
     'apps.apiv1',
+    'apps.entity',
+    'apps.session',
 ]
 
 MIDDLEWARE = [
@@ -29,13 +30,26 @@ APPEND_SLASH = False
 
 ROOT_URLCONF = 'urls'
 
+AUTH_USER_MODEL = 'apss.entity.User'
+
 SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
 SESSION_CACHE_ALIAS = 'default'
 
 CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': 'redis://127.0.0.1:6379',
+        'LOCATION': 'redis://127.0.0.1:6379/1',
+        'KEY_PREFIX': 'cache',
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+            'SOCKET_CONNECT_TIMEOUT': 5,
+            'SOCKET_TIMEOUT': 5,
+            'CONNECTION_POOL_KWARGS': {'max_connections': 100},
+        }
+    },
+    'storage': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': 'redis://127.0.0.1:6379/2',
         'KEY_PREFIX': 'cache',
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',

@@ -3,4 +3,4 @@ from django.apps import AppConfig
 
 
 class ReversiConfig(AppConfig):
-    name = 'apps.apiv1'
+    name = 'apps.entity'
